@@ -1,11 +1,44 @@
+import axios from 'axios';
 import express from 'express'
 import morgan from 'morgan'
+import dotenv from 'dotenv'
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(morgan('dev'))
+app.use(morgan('dev'));
 
+async function urlShortener(longUrl){
+    const token = process.env.BITLY_URL_SHORTENER_ACCESS_TOKEN; // Replace with your Bitly access token
+  try {
+    const response = await axios.post(
+      'https://api-ssl.bitly.com/v4/shorten',
+      { long_url: longUrl }, // Request body
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
+    // Extract and return the short link
+    return response.data.link;
+  } catch (error:any) {
+    console.error('Error creating short link:', error.response?.data || error.message);
+    throw error;
+  }
+  }
+
+// Example usage
+urlShortener('https://lehoa.app/experiences/home?pid=66f457925c2ecb5575e60204')
+  .then(shortLink => {
+    console.log('Short Link:', shortLink);
+  })
+  .catch(error => {
+    console.error('Failed to create short link:', error.message);
+  });
 
 app.get('/health', (req, res)=>{
     res.status(200).json({status:'Up'})
